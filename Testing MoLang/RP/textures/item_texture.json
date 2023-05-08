@@ -1,0 +1,9 @@
+{
+	"resource_pack_name": "Testing MoLang",
+	"texture_name": "atlas.items",
+	"texture_data": {
+		"morgan_gun": {
+			"textures": "textures/items/gun"
+		}
+	}
+}
