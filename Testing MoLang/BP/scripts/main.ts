@@ -5,8 +5,9 @@ import { everyBlockYouLookAtRandomises } from "./everyBlockYouLookAtRandomises.j
 import { oneHit } from "./oneHit.js";
 import { noLoner1, noLoner2 } from "./noLoner.js";
 import { worldDecay } from "./worldDecay.js";
-import { sphereSlice } from "./shapes.js";
-import { world, system, Entity, Vector, EntityFrictionModifierComponent, EntityInventoryComponent, ItemStack, MinecraftItemTypes, MinecraftEffectTypes, MinecraftBlockTypes, Block } from "@minecraft/server";
+import { sphere, sphereSlice } from "./shapes.js";
+import "./blockInteractName.js"
+import { world, system, EntityFrictionModifierComponent, EntityInventoryComponent, ItemStack, MinecraftItemTypes, MinecraftEffectTypes, MinecraftBlockTypes, Block } from "@minecraft/server";
 import "./antiTotem.js";
 
 
@@ -25,27 +26,16 @@ world.events.itemCompleteCharge.subscribe((event) => {
     event.source.addEffect(MinecraftEffectTypes.regeneration, 3 * 20, 2, false);
 });
 
-function getBlockTranslatable(block) {
-    const blockModId = block.typeId.split(":")[0];
-    const blockId = block.typeId.split(":")[1];
-    const text = `tile.${blockModId == "minecraft" ? "" : blockModId + "."}${blockId}.name`;
-    return {
-        rawtext: [
-            { translate: text }
-        ]
-    }
-}
-
-world.events.itemUseOn.subscribe((event) => {
+world.events.itemUse.subscribe((event) => {
     const item = event.item;
     const player = event.source;
-    const block = player.dimension.getBlock(event.getBlockLocation());
+    const block = player.getBlockFromViewDirection({ maxDistance: 400 });
 
-    if (item.type == null) {
-        player.runCommand(`titleraw @s actionbar ${JSON.stringify(getBlockTranslatable(block))}`);
-        //player.onScreenDisplay.setActionBar(JSON.stringify(getBlockTranslatable(block)));
+    if (item.type == MinecraftItemTypes.woodenAxe) {
+        sphereSlice(player.dimension, block.location, 4, MinecraftBlockTypes.stone);
     }
 });
+
 
 
 system.runInterval(() => {
