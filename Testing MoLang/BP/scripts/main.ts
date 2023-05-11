@@ -7,6 +7,7 @@ import { noLoner1, noLoner2 } from "./noLoner.js";
 import { worldDecay } from "./worldDecay.js";
 import "./shapes.js";
 import "./blockInteractName.js"
+import "./xpBottle.js"
 import { world, system, EntityFrictionModifierComponent, EntityInventoryComponent, ItemStack, MinecraftItemTypes, MinecraftEffectTypes } from "@minecraft/server";
 import "./antiTotem.js";
 
@@ -19,6 +20,9 @@ export var noLoner1Interval = null;
 export var noLoner2Interval = null;
 export var everyBlockYouLookAtRandomisesInterval = null;
 export var worldDecayInterval = null;
+export var slippy = true;
+
+
 
 world.events.itemCompleteCharge.subscribe((event) => {
     const item = event.itemStack;
@@ -32,7 +36,10 @@ system.runInterval(() => {
     const players = world.getAllPlayers();
 
     players.forEach((player) => {
-
+        if (slippy) {
+            const friction = player.getComponent("minecraft:friction_modifier") as EntityFrictionModifierComponent;
+            friction.value = 10;
+        }
         /*
         const inventory = player.getComponent("minecraft:inventory") as EntityInventoryComponent;
  
@@ -61,7 +68,7 @@ world.events.beforeChat.subscribe((event) => {
         let message = event.message;
 
         if (message == "!list") {
-            event.sender.sendMessage("randomEntityOnBlockBroken (1) \nexplode (2) \nrandomBlockOnEntityDeath (3) \noneHit (4) \nnoLoner1 (5) \nnoLoner2 (6) \neveryBlockYouLookAtRandomises (7) \nworldDecay (8)");
+            event.sender.sendMessage("randomEntityOnBlockBroken (1) \nexplode (2) \nrandomBlockOnEntityDeath (3) \noneHit (4) \nnoLoner1 (5) \nnoLoner2 (6) \neveryBlockYouLookAtRandomises (7) \nworldDecay (8) \nslippy (9)");
             event.cancel = true;
         }
 
@@ -209,19 +216,10 @@ world.events.beforeChat.subscribe((event) => {
 
                 case "9":
                 case "slippy":
-                    const players = world.getAllPlayers();
-                    players.forEach((player) => {
-                        const friction = player.getComponent("minecraft:friction_modifier") as EntityFrictionModifierComponent;
-                        if (friction == null) {
-                            console.warn("heasfadwd");
-                        }
-                        friction.value = 0;
-                    });
+                    slippy = !slippy;
                     event.cancel = true;
 
                     break;
-
-
             }
         }
     }

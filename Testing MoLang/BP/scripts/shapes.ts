@@ -1,6 +1,6 @@
 import { system, world, Dimension, Vector, BlockType, MinecraftItemTypes, MinecraftBlockTypes } from "@minecraft/server"
 
-export function circle(dimension: Dimension, center: Vector, radius: number, blockType: BlockType) {
+export function circle(dimension: Dimension, center: Vector, radius: number, blockMix: BlockType) {
     for (let x = -radius; x <= radius; x++) {
         let zOffset = Math.sqrt(radius * radius - x * x);
         dimension.fillBlocks(
@@ -14,22 +14,52 @@ export function circle(dimension: Dimension, center: Vector, radius: number, blo
                 Math.floor(center.y),
                 Math.ceil(center.z + zOffset)
             ),
-            blockType
+            blockMix
         );
-        //dimension.runCommand(`fill ${Math.floor(x)} ${Math.floor(center.y)} ${Math.floor(center.z - zOffset)} ${Math.floor(x)} ${Math.floor(center.y)} ${Math.floor(center.z + zOffset)} ${blockType.id}`);
+        //dimension.runCommand(`fill ${Math.floor(x)} ${Math.floor(center.y)} ${Math.floor(center.z - zOffset)} ${Math.floor(x)} ${Math.floor(center.y)} ${Math.floor(center.z + zOffset)} ${blockMix.id}`);
     }
 }
 
+class BlockMix {
+    constructor(...args: { blockType: BlockType, weight: undefined | number }[]) {
+        let cumulative = 0;
+        args.forEach((option) => {
+            if (option.weight != undefined)
+                cumulative += option.weight;
+        });
+
+        args.forEach((option) => {
+            if (option.weight == undefined)
+                option.weight = cumulative / args.length;
+        });
+        this.options = args;
+    }
+
+    getBlock(): BlockType {
+        let random = Math.random();
+        let cumulative = 0;
+        for (let index = 0; index < this.options.length; index++) {
+            cumulative += this.options[index].weight;
+            if (cumulative > random) return this.options[index].blockType;
+        }
+
+        return null;
+    }
+}
 
 var activeSphereHandlers = [];
 class SphereHandler {
-    constructor(dimension: Dimension, center: Vector, radius: number, blockType: BlockType) {
+    constructor(dimension: Dimension, center: Vector, radius: number, blockMix: BlockMix) {
         this.dimension = dimension;
         this.center = center;
         this.radiusCeiled = Math.ceil(radius);
         this.radiusSquared = radius * radius;
-        this.blockType = blockType;
+        this.blockMix = blockMix;
         this.fillPosition = new Vector(0, 0, 0);
+    }
+
+    validFillPosition() {
+        return this.fillPosition.lengthSquared() <= this.radiusSquared;
     }
 
     iterateFillPosition() {
@@ -50,43 +80,43 @@ class SphereHandler {
     }
 
     fillNextBlock() {
-        while (this.fillPosition.lengthSquared() > this.radiusSquared) {
+        while (!this.validFillPosition()) {
             if (!this.iterateFillPosition()) {
                 return false;
             }
         }
 
+        let blockPosition = Vector.add(this.center, { x: this.fillPosition.x, y: this.fillPosition.y, z: this.fillPosition.z });
+        let blockType = this.blockMix.getBlock();
+        if (blockPosition.y > - 64 && blockPosition.y < 320 && blockType != null) this.dimension.getBlock(blockPosition).setType(blockType);
 
-        let block = this.dimension.getBlock(Vector.add(this.center, { x: this.fillPosition.x, y: this.fillPosition.y, z: this.fillPosition.z }));
-        if (block != null) block.setType(this.blockType);
+        blockType = this.blockMix.getBlock();
+        blockPosition = Vector.add(this.center, { x: -this.fillPosition.x, y: this.fillPosition.y, z: this.fillPosition.z });
+        if (blockPosition.y > - 64 && blockPosition.y < 320 && blockType != null) this.dimension.getBlock(blockPosition).setType(blockType);
 
+        blockType = this.blockMix.getBlock();
+        blockPosition = Vector.add(this.center, { x: this.fillPosition.x, y: -this.fillPosition.y, z: this.fillPosition.z });
+        if (blockPosition.y > - 64 && blockPosition.y < 320 && blockType != null) this.dimension.getBlock(blockPosition).setType(blockType);
 
-        block = this.dimension.getBlock(Vector.add(this.center, { x: -this.fillPosition.x, y: this.fillPosition.y, z: this.fillPosition.z }));
-        if (block != null) block.setType(this.blockType);
+        blockType = this.blockMix.getBlock();
+        blockPosition = Vector.add(this.center, { x: -this.fillPosition.x, y: -this.fillPosition.y, z: this.fillPosition.z });
+        if (blockPosition.y > -64 && blockPosition.y < 320 && blockType != null) this.dimension.getBlock(blockPosition).setType(blockType);
 
+        blockType = this.blockMix.getBlock();
+        blockPosition = Vector.add(this.center, { x: this.fillPosition.x, y: this.fillPosition.y, z: -this.fillPosition.z });
+        if (blockPosition.y > - 64 && blockPosition.y < 320 && blockType != null) this.dimension.getBlock(blockPosition).setType(blockType);
 
-        block = this.dimension.getBlock(Vector.add(this.center, { x: this.fillPosition.x, y: -this.fillPosition.y, z: this.fillPosition.z }));
-        if (block != null) block.setType(this.blockType);
+        blockType = this.blockMix.getBlock();
+        blockPosition = Vector.add(this.center, { x: -this.fillPosition.x, y: this.fillPosition.y, z: -this.fillPosition.z });
+        if (blockPosition.y > - 64 && blockPosition.y < 320 && blockType != null) this.dimension.getBlock(blockPosition).setType(blockType);
 
+        blockType = this.blockMix.getBlock();
+        blockPosition = Vector.add(this.center, { x: this.fillPosition.x, y: -this.fillPosition.y, z: -this.fillPosition.z });
+        if (blockPosition.y > - 64 && blockPosition.y < 320 && blockType != null) this.dimension.getBlock(blockPosition).setType(blockType);
 
-        block = this.dimension.getBlock(Vector.add(this.center, { x: -this.fillPosition.x, y: -this.fillPosition.y, z: this.fillPosition.z }));
-        if (block != null) block.setType(this.blockType);
-
-
-        block = this.dimension.getBlock(Vector.add(this.center, { x: this.fillPosition.x, y: this.fillPosition.y, z: -this.fillPosition.z }));
-        if (block != null) block.setType(this.blockType);
-
-
-        block = this.dimension.getBlock(Vector.add(this.center, { x: -this.fillPosition.x, y: this.fillPosition.y, z: -this.fillPosition.z }));
-        if (block != null) block.setType(this.blockType);
-
-
-        block = this.dimension.getBlock(Vector.add(this.center, { x: this.fillPosition.x, y: -this.fillPosition.y, z: -this.fillPosition.z }));
-        if (block != null) block.setType(this.blockType);
-
-
-        block = this.dimension.getBlock(Vector.add(this.center, { x: -this.fillPosition.x, y: -this.fillPosition.y, z: -this.fillPosition.z }));
-        if (block != null) block.setType(this.blockType);
+        blockType = this.blockMix.getBlock();
+        blockPosition = Vector.add(this.center, { x: -this.fillPosition.x, y: -this.fillPosition.y, z: -this.fillPosition.z });
+        if (blockPosition.y > - 64 && blockPosition.y < 320 && blockType != null) this.dimension.getBlock(blockPosition).setType(blockType);
 
         if (!this.iterateFillPosition()) {
             return false;
@@ -96,10 +126,27 @@ class SphereHandler {
     }
 };
 
-export function generateSphere(dimension: Dimension, center: Vector, radius: number, blockType: BlockType) {
+class HollowSphereHandler extends SphereHandler {
+    constructor(dimension: Dimension, center: Vector, radius: number, hollowRadius: number, blockMix: BlockMix) {
+        super(dimension, center, radius, blockMix);
+        this.hollowRadiusSquared = hollowRadius * hollowRadius;
+    }
+
+    validFillPosition() {
+        return super.validFillPosition() && this.fillPosition.lengthSquared() > this.hollowRadiusSquared;
+    }
+}
+
+export function generateSphere(dimension: Dimension, center: Vector, radius: number, blockMix: BlockMix) {
     radius -= 0.5;
 
-    activeSphereHandlers.push(new SphereHandler(dimension, center, radius, blockType));
+    activeSphereHandlers.push(new SphereHandler(dimension, center, radius, blockMix));
+}
+
+export function generateHollowSphere(dimension: Dimension, center: Vector, radius: number, blockMix: BlockMix) {
+    radius -= 0.5;
+
+    activeSphereHandlers.push(new HollowSphereHandler(dimension, center, radius, radius - 2, blockMix));
 }
 
 var size = 4;
@@ -108,8 +155,8 @@ world.events.itemUse.subscribe((event) => {
     const player = event.source;
     const block = player.getBlockFromViewDirection({ maxDistance: 400 });
 
-    if (item.type == MinecraftItemTypes.woodenAxe) {
-        generateSphere(player.dimension, block.location, size, MinecraftBlockTypes.bedrock);
+    if (item.type == MinecraftItemTypes.woodenAxe && player.isOp()) {
+        generateHollowSphere(player.dimension, block.location, size, new BlockMix({ blockType: MinecraftBlockTypes.seaLantern, weight: 0.1 }));
     }
 });
 

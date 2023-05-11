@@ -119,13 +119,17 @@
             },
             "minecraft:nameable": {
                 "always_show": true,
-                "allow_name_tag_renaming": false
+                "allow_name_tag_renaming": true
             },
             "minecraft:physics": {
                 "push_towards_closest_space": true
             },
+            "minecraft:friction_modifier": {
+                "value": 0
+            },
+            "minecraft:leashable": {},
             "minecraft:pushable": {
-                "is_pushable": false,
+                "is_pushable": true,
                 "is_pushable_by_piston": true
             },
             "minecraft:insomnia": {
