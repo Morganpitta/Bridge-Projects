@@ -5,7 +5,7 @@ import { everyBlockYouLookAtRandomises } from "./everyBlockYouLookAtRandomises.j
 import { oneHit } from "./oneHit.js";
 import { noLoner1, noLoner2 } from "./noLoner.js";
 import { worldDecay } from "./worldDecay.js";
-import "./shapes.js";
+import "./worldEdit/worldEdit.js";
 import "./blockInteractName.js"
 import "./xpBottle.js"
 import { world, system, EntityFrictionModifierComponent, EntityInventoryComponent, ItemStack, MinecraftItemTypes, MinecraftEffectTypes } from "@minecraft/server";
