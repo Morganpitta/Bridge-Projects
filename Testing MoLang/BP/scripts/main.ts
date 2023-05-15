@@ -31,7 +31,6 @@ world.events.itemCompleteCharge.subscribe((event) => {
 });
 
 
-
 system.runInterval(() => {
     const players = world.getAllPlayers();
 

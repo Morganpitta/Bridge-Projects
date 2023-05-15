@@ -155,7 +155,7 @@ class HollowSphereHandler extends SphereHandler {
     }
 
     validFillPosition() {
-        return super.validFillPosition() && this.fillPosition.lengthSquared() > this.hollowRadiusSquared;
+        return super.validFillPosition() && this.fillPosition.lengthSquared() >= this.hollowRadiusSquared;
     }
 }
 
@@ -165,10 +165,10 @@ export function generateSphere(dimension: Dimension, center: Vector, radius: num
     activeSphereHandlers.push(new SphereHandler(dimension, center, radius, blockMix));
 }
 
-export function generateHollowSphere(dimension: Dimension, center: Vector, radius: number, blockMix: BlockMix) {
+export function generateHollowSphere(dimension: Dimension, center: Vector, radius: number, thickness: number, blockMix: BlockMix) {
     radius -= 0.5;
 
-    activeSphereHandlers.push(new HollowSphereHandler(dimension, center, radius, radius - 2, blockMix));
+    activeSphereHandlers.push(new HollowSphereHandler(dimension, center, radius, Math.max(0, radius - thickness), blockMix));
 }
 
 

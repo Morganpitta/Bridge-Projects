@@ -1,8 +1,8 @@
 import { MinecraftBlockTypes, Player, Vector, Block, } from "@minecraft/server"
 import { generateSphere, generateHollowSphere, circle, BlockMix, fill, clearActiveSphereHandlers } from "./shapes.js";
-import { ModalFormData } from "@minecraft/server-ui";
+import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
 
-export class WorldEditState {
+export class WorldEditMode {
     player: Player;
 
     constructor(player: Player) {
@@ -17,12 +17,23 @@ export class WorldEditState {
 
     }
 
-    addStateSettings(menu: ModalFormData) {
+    addEditModeSettingsButton(menu: ActionFormData) {
+        menu.button(this.toString() + " Mode Settings");
+    }
 
+    createEditModeSettings(): ModalFormData {
+        let menu = new ModalFormData();
+        menu.title(this.toString() + " Mode Settings");
+
+        return menu;
+    }
+
+    updateEditModeSettings(formData: any[]): any[] {
+        return formData;
     }
 }
 
-export class SphereState extends WorldEditState {
+export class SphereMode extends WorldEditMode {
     size: number;
     blockMix: BlockMix;
 
@@ -48,12 +59,25 @@ export class SphereState extends WorldEditState {
         generateSphere(this.player.dimension, block.location, this.size, this.blockMix);
     }
 
-    addStateSettings(menu: ModalFormData) {
+    createEditModeSettings(): ModalFormData {
+        let menu = super.createEditModeSettings() as ModalFormData;
+        menu.slider("Sphere Radius", 1, 100, 1, this.size);
 
+        return menu;
+    }
+
+    updateEditModeSettings(formData: any[]): any[] {
+        formData = super.updateEditModeSettings(formData);
+
+        this.setSize(formData.shift());
+
+        return formData;
     }
 }
 
-export class HollowSphereState extends SphereState {
+export class HollowSphereMode extends SphereMode {
+    thickness: number;
+
     constructor(player: Player) {
         super(player);
         this.setSize(5);
@@ -64,12 +88,31 @@ export class HollowSphereState extends SphereState {
         return "Hollow Sphere";
     }
 
+    setThickness(thickness: number) {
+        this.thickness = thickness;
+    }
+
     rightClickAction(block: Block) {
-        generateHollowSphere(this.player.dimension, block.location, this.size, this.blockMix);
+        generateHollowSphere(this.player.dimension, block.location, this.size, this.thickness, this.blockMix);
+    }
+
+    createEditModeSettings(): ModalFormData {
+        let menu = super.createEditModeSettings() as ModalFormData;
+        menu.slider("Sphere Thickness", 1, 100, 1, this.thickness);
+
+        return menu;
+    }
+
+    updateEditModeSettings(formData: any[]): any[] {
+        formData = super.updateEditModeSettings(formData);
+
+        this.setThickness(formData.shift());
+
+        return formData;
     }
 }
 
-export class FillState extends WorldEditState {
+export class FillMode extends WorldEditMode {
     startPosition: Vector;
     endPosition: Vector;
     blockMix: BlockMix;
@@ -119,23 +162,19 @@ export class FillState extends WorldEditState {
             this.player.sendMessage(`Filled ${filled} blocks`);
         }
     }
-
-    addStateSettings(menu: ModalFormData) {
-        menu.toggle("adafasfcagv");
-    }
 }
 
 export class WorldEditSettings {
-    state: WorldEditState;
+    mode: WorldEditMode;
     maxDistance: number;
 
-    constructor(state: WorldEditState, maxDistance: number = null) {
-        this.setState(state);
+    constructor(mode: WorldEditMode, maxDistance: number = null) {
+        this.setMode(mode);
         this.setMaxDistance(maxDistance);
     }
 
-    setState(state: WorldEditState) {
-        this.state = state;
+    setMode(mode: WorldEditMode) {
+        this.mode = mode;
     }
 
     setMaxDistance(maxDistance: number) {
@@ -152,20 +191,20 @@ export class WorldEditSettings {
 var playerWorldEditSettings: { [id: string]: WorldEditSettings } = {};
 export function getPlayerWorldEditSettings(player: Player): WorldEditSettings {
     if (playerWorldEditSettings[player.id] == undefined) {
-        playerWorldEditSettings[player.id] = new WorldEditSettings(new FillState(player));
+        playerWorldEditSettings[player.id] = new WorldEditSettings(new FillMode(player));
     }
 
     return playerWorldEditSettings[player.id];
 }
 
-export function getPlayerWorldEditState(player: Player): WorldEditState {
-    return getPlayerWorldEditSettings(player).state;
+export function getPlayerWorldEditMode(player: Player): WorldEditMode {
+    return getPlayerWorldEditSettings(player).mode;
 }
 
 export function setPlayerWorldEditSettings(player: Player, settings: WorldEditSettings) {
     playerWorldEditSettings[player.id] = settings;
 }
 
-export function setPlayerWorldEditState(player: Player, state: WorldEditState) {
-    getPlayerWorldEditSettings(player).setState(state);
+export function setPlayerWorldEditMode(player: Player, mode: WorldEditMode) {
+    getPlayerWorldEditSettings(player).setMode(mode);
 }

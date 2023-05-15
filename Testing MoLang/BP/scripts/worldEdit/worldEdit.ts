@@ -1,6 +1,6 @@
 import { world, MinecraftItemTypes, MinecraftBlockTypes, Player, ItemStack, Vector, Block, MinecraftEnchantmentTypes, Enchantment } from "@minecraft/server"
 import { generateSphere, generateHollowSphere, circle, BlockMix, fill, clearActiveSphereHandlers } from "./shapes.js";
-import { WorldEditState, WorldEditSettings, SphereState, FillState, HollowSphereState, getPlayerWorldEditSettings, getPlayerWorldEditState, setPlayerWorldEditSettings, setPlayerWorldEditState } from "./worldEditSettings.js"
+import { WorldEditMode, WorldEditSettings, SphereMode, FillMode, HollowSphereMode, getPlayerWorldEditSettings, getPlayerWorldEditMode, setPlayerWorldEditSettings, setPlayerWorldEditMode } from "./worldEditSettings.js"
 import { openSettingsMenu } from "./worldEditSettingsMenu.js";
 
 const AxeName = "World Edit Axe";
@@ -27,7 +27,7 @@ world.events.itemUse.subscribe((event) => {
             const block = player.getBlockFromViewDirection({ maxDistance: settings.maxDistance });
 
             if (block != null)
-                getPlayerWorldEditSettings(player).state.rightClickAction(block);
+                getPlayerWorldEditSettings(player).mode.rightClickAction(block);
         }
         else if (
             item.type == MinecraftItemTypes.diamond &&
@@ -73,32 +73,32 @@ world.events.beforeChat.subscribe((event) => {
         }
 
         if (message == "!sphere") {
-            setPlayerWorldEditState(player, new SphereState(player));
+            setPlayerWorldEditMode(player, new SphereMode(player));
             event.cancel = true;
         }
 
         if (message.startsWith("!spheresize")) {
             message = message.slice(11);
-            let state = getPlayerWorldEditState(player);
+            let mode = getPlayerWorldEditMode(player);
 
-            if (!(state instanceof SphereState || state instanceof HollowSphereState)) {
-                setPlayerWorldEditState(player, new SphereState(player));
+            if (!(mode instanceof SphereMode || mode instanceof HollowSphereMode)) {
+                setPlayerWorldEditMode(player, new SphereMode(player));
             }
 
-            getPlayerWorldEditState(player).setSize(parseInt(message));
+            getPlayerWorldEditMode(player).setSize(parseInt(message));
 
             event.cancel = true;
         }
 
         if (message.startsWith("!fill")) {
             message = message.slice(11);
-            let state = getPlayerWorldEditState(player);
+            let mode = getPlayerWorldEditMode(player);
 
-            if (!(state instanceof FillState)) {
-                setPlayerWorldEditState(player, new FillState(player));
+            if (!(mode instanceof FillMode)) {
+                setPlayerWorldEditMode(player, new FillMode(player));
             }
             else {
-                state.fill();
+                mode.fill();
             }
 
             event.cancel = true;
